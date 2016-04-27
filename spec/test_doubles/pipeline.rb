@@ -1,5 +1,3 @@
-require 'boundary'
-
 module TestDoubles
   class Pipeline
     def blow_up
@@ -11,6 +9,10 @@ module TestDoubles
     end
 
     def not_handled
+      raise
+    end
+
+    def nil_on_handler
       raise
     end
 
@@ -26,6 +28,6 @@ module TestDoubles
       number * 3
     end
 
-    include Boundary
+    include ChocolateShell::Boundary
   end
 end

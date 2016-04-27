@@ -5,16 +5,15 @@ module TestDoubles
         :default
       end
 
+      def nil_on_handler(data, error)
+      end
+
       def custom_blow_up(data, error)
         if data == {}
           :extra
         else
           :custom
         end
-      end
-
-      def default(data, error)
-        :default
       end
     end
   end

@@ -1,25 +1,13 @@
-require 'boundary'
+require 'chocolate_shell'
 require 'test_doubles/pipeline'
 require 'test_doubles/error_handler'
 
-describe Boundary do
+describe ChocolateShell::Boundary do
   let(:test_pipeline) do
     TestDoubles::Pipeline.new(1)
   end
 
   let(:error_handler) { TestDoubles::ErrorHandler }
-
-  xit 'accepts a pre condition' do
-  end
-
-  xit 'returns a Boundary::PreConditionError if pre-condition fails' do
-  end
-
-  xit 'builds a log' do
-  end
-
-  xit 'error handler implements default by itself, returns BoundaryHandler::DefaultError with callstack' do
-  end
 
   it 'returns an error' do
     result, error = test_pipeline
@@ -45,12 +33,29 @@ describe Boundary do
     expect(error).to eq(:extra)
   end
 
-  it 'calls default if the method is not defined on the handler' do
+  it 'returns the error itself if the method is not defined on the handler' do
     result, error = test_pipeline
       .not_handled
       .on_error(error_handler)
 
-    expect(error).to eq(:default)
+    expect(error).to be_kind_of(ArgumentError)
+  end
+
+  it 'returns the error itself if the method is defined but returns nil' do
+    result, error = test_pipeline
+      .nil_on_handler
+      .on_error(error_handler)
+
+    expect(error).to be_kind_of(ArgumentError)
+  end
+
+  it 'does not return partial results when errors occur' do
+    result, error = test_pipeline
+      .add_1
+      .not_handled
+      .on_error(error_handler)
+
+    expect(result).to be_nil
   end
 
   it 'returns a result' do
