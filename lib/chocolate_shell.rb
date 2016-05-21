@@ -3,8 +3,9 @@ module ChocolateShell
     def self.included(klass)
       imethods = klass.instance_methods(false)
 
-      klass.send(:define_method, "initialize") do |value|
+      klass.send(:define_method, "initialize") do |value, opts = {}|
         @result = value
+        @log_handler = opts[:log_handler]
         super()
       end
 
@@ -26,7 +27,14 @@ module ChocolateShell
           return self if @failed
 
           begin
-            @result = __send__("original_#{method}", @result)
+            @result =
+              if @log_handler && @log_handler.respond_to?(method)
+                @log_handler.__send__(method) do
+                  __send__("original_#{method}", @result)
+                end
+              else
+                __send__("original_#{method}", @result)
+              end
           rescue => e
             @failed = true
             @error = e
