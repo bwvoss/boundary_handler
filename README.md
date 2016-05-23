@@ -13,7 +13,6 @@ The chocolate shell is a place where error handling and logging take place away 
 
 - custom communicative error callstack
 - add precondition check
-- pass in error strategy on init (value, {opts}); #subscribe
 - consider adding retry mechanism to error handler
 - add a failure if the value is nil going into another method -- broken windows theory
 - semaphores and circuit breaker, for less coupled components

@@ -6,13 +6,14 @@ module ChocolateShell
       klass.send(:define_method, "initialize") do |value, opts = {}|
         @result = value
         @log_handler = opts[:log_handler]
+        @error_handler = opts[:error_handler]
         super()
       end
 
-      klass.send(:define_method, "on_error") do |handler|
+      klass.send(:define_method, "subscribe") do
         err =
-          if @method && handler.respond_to?(@method)
-            handler.__send__(@method, @result, @error) || @error
+          if @method && @error_handler && @error_handler.respond_to?(@method)
+            @error_handler.__send__(@method, @result, @error) || @error
           elsif @method
             @error
           end
@@ -29,7 +30,7 @@ module ChocolateShell
           begin
             @result =
               if @log_handler && @log_handler.respond_to?(method)
-                @log_handler.__send__(method) do
+                @log_handler.__send__(method, @result) do
                   __send__("original_#{method}", @result)
                 end
               else

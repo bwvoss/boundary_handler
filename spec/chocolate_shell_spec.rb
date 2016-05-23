@@ -7,7 +7,10 @@ describe ChocolateShell::Boundary do
   let(:logger) { [] }
 
   let(:test_pipeline) do
-    TestDoubles::Pipeline.new(1, log_handler: TestDoubles::LogHandler.new(logger))
+    TestDoubles::Pipeline.new(1,
+                              log_handler: TestDoubles::LogHandler.new(logger),
+                              error_handler: error_handler
+                             )
   end
 
   let(:error_handler) { TestDoubles::ErrorHandler }
@@ -15,7 +18,7 @@ describe ChocolateShell::Boundary do
   it 'returns a result' do
     result, error = test_pipeline
       .add_1
-      .on_error(error_handler)
+      .subscribe
 
     expect(result).to eq(2)
   end
@@ -25,7 +28,7 @@ describe ChocolateShell::Boundary do
       .add_1
       .add_2
       .times_3
-      .on_error(error_handler)
+      .subscribe
 
     expect(result).to eq(12)
   end
@@ -34,7 +37,7 @@ describe ChocolateShell::Boundary do
     it 'returns an error' do
       result, error = test_pipeline
       .blow_up
-      .on_error(error_handler)
+      .subscribe
 
       expect(error).to eq(:default)
     end
@@ -42,15 +45,15 @@ describe ChocolateShell::Boundary do
     it 'returns an custom key' do
       result, error = test_pipeline
       .custom_blow_up
-      .on_error(error_handler)
+      .subscribe
 
       expect(error).to eq(:custom)
     end
 
     it 'returns an custom i18n key found with extra data' do
-      result, error = TestDoubles::Pipeline.new({})
+      result, error = TestDoubles::Pipeline.new({}, error_handler: error_handler)
       .custom_blow_up
-      .on_error(error_handler)
+      .subscribe
 
       expect(error).to eq(:extra)
     end
@@ -58,7 +61,7 @@ describe ChocolateShell::Boundary do
     it 'returns the error itself if the method is not defined on the handler' do
       result, error = test_pipeline
       .not_handled
-      .on_error(error_handler)
+      .subscribe
 
       expect(error).to be_kind_of(ArgumentError)
     end
@@ -66,7 +69,7 @@ describe ChocolateShell::Boundary do
     it 'returns the error itself if the method is defined but returns nil' do
       result, error = test_pipeline
       .nil_on_handler
-      .on_error(error_handler)
+      .subscribe
 
       expect(error).to be_kind_of(ArgumentError)
     end
@@ -75,7 +78,7 @@ describe ChocolateShell::Boundary do
       result, error = test_pipeline
       .add_1
       .not_handled
-      .on_error(error_handler)
+      .subscribe
 
       expect(result).to be_nil
     end
@@ -85,7 +88,7 @@ describe ChocolateShell::Boundary do
     it 'does nothing if no method defined' do
       result, error = test_pipeline
         .add_2
-        .on_error(error_handler)
+        .subscribe
 
       expect(error).to be_nil
       expect(result).to eq(3)
@@ -94,11 +97,21 @@ describe ChocolateShell::Boundary do
     it 'logs data around the execution' do
       result, error = test_pipeline
         .add_1
-        .on_error(error_handler)
+        .subscribe
 
       expect(error).to be_nil
       expect(result).to eq(2)
       expect(logger).to eq(['before add_1', 'after add_1'])
+    end
+
+    it 'has access to the current context when logging' do
+      result, error = test_pipeline
+        .add_2
+        .subscribe
+
+      expect(error).to be_nil
+      expect(result).to eq(3)
+      expect(logger).to eq([1])
     end
   end
 end
